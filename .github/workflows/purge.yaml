@@ -26,22 +26,22 @@ jobs:
         BLUESKY_USERNAME: ${{ secrets.BLUESKY_USERNAME }}
         BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
       run: |
-        python skeeter_deleter.py -l 100 -s 2 -d emilygorcenski.com -c 3k2njt2njcr2f -v -y
+        python skeeter_deleter.py -s 5 -v -y
 
     ## Various cloud-based archival options here
     ## If you don't want to archive in the cloud, then simply comment these sections out or remove them
     ## Alternatively, set up Github secrets for the following fields to leverage these storage options
-    - name: Setup Exoscale
-      uses: nhedger/setup-exoscale@v3.0.0
-      with:
-        version: "latest"
-        zone: "${{ secrets.EXOSCALE_ZONE }}"
-        account: "${{ secrets.EXOSCALE_ACCOUNT_NAME }}"
-        key: "${{ secrets.EXOSCALE_API_KEY }}"
-        secret: "${{ secrets.EXOSCALE_API_SECRET }}"
+    #- name: Setup Exoscale
+      #uses: nhedger/setup-exoscale@v3.0.0
+      #with:
+        #version: "latest"
+        #zone: "${{ secrets.EXOSCALE_ZONE }}"
+        #account: "${{ secrets.EXOSCALE_ACCOUNT_NAME }}"
+        #key: "${{ secrets.EXOSCALE_API_KEY }}"
+        #secret: "${{ secrets.EXOSCALE_API_SECRET }}"
 
-    - name: Upload to Exoscale
-      run: exo storage upload -r archive/ sos://efg-social-archive/bsky/
+    #- name: Upload to Exoscale
+      #run: exo storage upload -r archive/ sos://efg-social-archive/bsky/
 
     ## Use Github Actions archive
     ## Will only retain the last 500 or so runs

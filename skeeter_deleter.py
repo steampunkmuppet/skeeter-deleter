@@ -80,24 +80,24 @@ class PostQualifier(models.AppBskyFeedDefs.PostView):
     def _init_PostQualifier(self, client : Client):
         self.client = client
 
-#    def delete_like(self):
-#        """
-#        Remove a like from a post
-#        """
-#        try:
-#            logging.info(f"Removing like: {self.viewer.like}")
-#            self.client.delete_like(self.viewer.like)
-#        except httpx.HTTPStatusError as e:
-#            logging.error(f"HTTP error occurred while unliking: {e}")
-#            try:
-#                logging.info(f"Removing like via URI: {self.uri}")
-#                self.client.delete_like(self.uri)
-#            except httpx.HTTPStatusError as e:
-#                logging.error(f"HTTP error occurred while unliking via URI: {e}")
-#            except Exception as e:
-#                raise e
-#        except Exception as e:
-#            logging.error(f"An error occurred while unliking: {e}")
+    def delete_like(self):
+        """
+        Remove a like from a post
+        """
+        try:
+            logging.info(f"Removing like: {self.viewer.like}")
+            self.client.delete_like(self.viewer.like)
+        except httpx.HTTPStatusError as e:
+            logging.error(f"HTTP error occurred while unliking: {e}")
+            try:
+                logging.info(f"Removing like via URI: {self.uri}")
+                self.client.delete_like(self.uri)
+            except httpx.HTTPStatusError as e:
+                logging.error(f"HTTP error occurred while unliking via URI: {e}")
+            except Exception as e:
+                raise e
+        except Exception as e:
+            logging.error(f"An error occurred while unliking: {e}")
 
     def remove(self):
         """
@@ -326,15 +326,15 @@ class SkeeterDeleter:
                 break
         return to_delete
 
-#    def batch_unlike_posts(self) -> None:
-#        logging.info(f"Unliking {len(self.to_unlike)} post{'' if len(self.to_unlike) == 1 else 's'}")
-#        if self.verbosity > 0:
-#            print(f"Unliking {len(self.to_unlike)} post{'' if len(self.to_unlike) == 1 else 's'}")
-#        for post in rich.progress.track(self.to_unlike):
-#            logging.info(f"Unliking: {post.uri} by {post.author.handle}, CID: {post.cid}")
-#            if self.verbosity == 2:
-#                print(f"Unliking: {post.uri} by {post.author.handle}, CID: {post.cid}")
-#            post.delete_like()
+    def batch_unlike_posts(self) -> None:
+        logging.info(f"Unliking {len(self.to_unlike)} post{'' if len(self.to_unlike) == 1 else 's'}")
+        if self.verbosity > 0:
+            print(f"Unliking {len(self.to_unlike)} post{'' if len(self.to_unlike) == 1 else 's'}")
+        for post in rich.progress.track(self.to_unlike):
+            logging.info(f"Unliking: {post.uri} by {post.author.handle}, CID: {post.cid}")
+            if self.verbosity == 2:
+                print(f"Unliking: {post.uri} by {post.author.handle}, CID: {post.cid}")
+            post.delete_like()
 
     def batch_delete_posts(self) -> None:
         logging.info(f"Deleting {len(self.to_delete)} post{'' if len(self.to_delete) == 1 else 's'}")
@@ -473,5 +473,5 @@ default="")
     }
 
     sd = SkeeterDeleter(credentials=creds, **params)
-    sd.unlike()
+#    sd.unlike()
     sd.delete()

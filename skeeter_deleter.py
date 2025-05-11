@@ -473,5 +473,5 @@ default="")
     }
 
     sd = SkeeterDeleter(credentials=creds, **params)
-#    sd.unlike()
+    sd.unlike()
     sd.delete()

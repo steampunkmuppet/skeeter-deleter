@@ -69,3 +69,5 @@ jobs:
     # - name: logout
     #   run: |
     #       az logout
+
+    # Edit to stop deletion

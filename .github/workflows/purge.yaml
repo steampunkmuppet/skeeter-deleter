@@ -26,7 +26,7 @@ jobs:
         BLUESKY_USERNAME: ${{ secrets.BLUESKY_USERNAME }}
         BLUESKY_PASSWORD: ${{ secrets.BLUESKY_PASSWORD }}
       run: |
-        python skeeter_deleter.py -s 3 -v -y
+        python skeeter_deleter.py -s 2 -v -y
 
     ## Various cloud-based archival options here
     ## If you don't want to archive in the cloud, then simply comment these sections out or remove them

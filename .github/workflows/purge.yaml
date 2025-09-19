@@ -70,4 +70,4 @@ jobs:
     #   run: |
     #       az logout
 
-    # Edit to stop deletion
+    # Edit to stop deletion 

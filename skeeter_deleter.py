@@ -33,7 +33,7 @@ class PostQualifier(models.AppBskyFeedDefs.PostView):
             bool: True if the post is viral, False otherwise.
         """
         if viral_threshold == 0:
-            return True
+            return False
         return self.repost_count >= viral_threshold
 
     def is_stale(self, stale_threshold, now) -> bool:

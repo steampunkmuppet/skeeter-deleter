@@ -1,8 +1,8 @@
-#on:
-#  schedule:
-#  - cron: '25 */6 * * *'
-# push:
-#   branches: ['main']
+on:
+  schedule:
+  - cron: '25 */3 * * *'
+ push:
+   branches: ['main']
   
 jobs:
   sync-rss:

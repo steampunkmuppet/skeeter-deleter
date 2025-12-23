@@ -136,8 +136,8 @@ class PostQualifier(models.AppBskyFeedDefs.PostView):
         Returns:
             bool: True if the post should be deleted, False otherwise.
         """
-        if #(post.is_viral(viral_threshold) or 
-                    post.is_stale(stale_threshold, now) and \
+        #if (post.is_viral(viral_threshold) or 
+        if post.is_stale(stale_threshold, now) and \
             not post.is_protected_domain(domains_to_protect) and \
             not post.is_self_liked(self_likes):
             return True

@@ -216,7 +216,7 @@ class SkeeterDeleter:
         else:
             return block
 #begin ChatGPT Edit
-        def gather_likes(self, repo, stale_threshold, now, **kwargs) -> list[PostQualifier]:
+    def gather_likes(self, repo, stale_threshold, now, **kwargs) -> list[PostQualifier]:
         archive = CAR.from_bytes(repo)
         
         # Collect the posts liked by the user
@@ -242,6 +242,7 @@ class SkeeterDeleter:
 
         return to_delete
 #end ChatGPT edit
+  
     def gather_reposts(self,
                        repo,
                        #viral_threshold,

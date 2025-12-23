@@ -25,13 +25,13 @@ class PostQualifier(models.AppBskyFeedDefs.PostView):
     These filters are customizable, or new filters can be added here
     """
     #def is_viral(self, viral_threshold) -> bool:
-        """
-        Check if the post is viral based on the repost count.
-        Args:
-            viral_threshold (int): The threshold for considering a post viral.
-        Returns:
-            bool: True if the post is viral, False otherwise.
-        """
+    #    """
+    #    Check if the post is viral based on the repost count.
+    #    Args:
+    #        viral_threshold (int): The threshold for considering a post viral.
+    #    Returns:
+    #        bool: True if the post is viral, False otherwise.
+    #    """
        # if viral_threshold == 0:
        #     return False
        # return self.repost_count >= viral_threshold

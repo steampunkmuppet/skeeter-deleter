@@ -8,7 +8,7 @@ from atproto import CAR, Client, models
 from atproto_core.cid import CID
 from atproto_client.request import Request
 from dataclasses import dataclass, asdict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from functools import partial
 from pathlib import Path
 
@@ -97,14 +97,59 @@ class SkeeterDeleter:
         else:
             return block
 
+    def _is_older_than_days(self, post, days: int) -> bool:
+        """
+        Return True if the post is older than `days` days.
+        Handles created timestamps either as strings (ISO) or datetime objects.
+        If the created time cannot be determined, returns False (conservative).
+        """
+        created = None
+        # Try common attribute names first
+        try:
+            created = getattr(post.record, 'created_at', None) or getattr(post.record, 'createdAt', None)
+        except Exception:
+            created = None
+
+        # If still not found, try treating record as dict-like
+        if created is None:
+            try:
+                created = post.record.get('createdAt') or post.record.get('created_at')
+            except Exception:
+                created = None
+
+        if created is None:
+            return False
+
+        # Parse string timestamps robustly
+        if isinstance(created, str):
+            try:
+                if created.endswith('Z'):
+                    created_dt = datetime.fromisoformat(created.replace('Z', '+00:00'))
+                else:
+                    created_dt = datetime.fromisoformat(created)
+            except Exception:
+                # Could not parse timestamp
+                return False
+        elif isinstance(created, datetime):
+            created_dt = created
+        else:
+            return False
+
+        # Ensure timezone-aware
+        if created_dt.tzinfo is None:
+            created_dt = created_dt.replace(tzinfo=timezone.utc)
+
+        return (datetime.now(timezone.utc) - created_dt) > timedelta(days=days)
+
     def gather_self_liked_posts(self, repo, **kwargs) -> list[PostQualifier]:
         """
         From the archived repo, find like records created by this account (the archive contains
         your own likes), identify those likes that reference your own posts (self-likes),
-        fetch the corresponding posts via the API, and return the subset authored by you.
+        fetch the corresponding posts via the API, and return the subset authored by you
+        that are older than 3 days.
 
         Returns:
-            list[PostQualifier]: posts authored by me that I have self-liked
+            list[PostQualifier]: posts authored by me that I have self-liked and are older than 3 days
         """
         archive = CAR.from_bytes(repo)
         # Extract all like records from the archive (these are likes made by this account)
@@ -120,9 +165,10 @@ class SkeeterDeleter:
         for batch in self.chunker(self_like_records, 25):
             try:
                 posts = self.client.get_posts(uris=[x['subject']['uri'] for x in batch])
-                # Keep only posts authored by me (safety check)
+                # Keep only posts authored by me (safety check) AND older than 3 days
                 posts_to_delete.extend(
-                    [p for p in map(partial(PostQualifier.cast, self.client), posts.posts) if p.author.did == self.client.me.did]
+                    [p for p in map(partial(PostQualifier.cast, self.client), posts.posts)
+                     if p.author.did == self.client.me.did and self._is_older_than_days(p, 3)]
                 )
             except httpx.HTTPStatusError as e:
                 logging.error(f"An HTTP error occured while fetching self-liked posts: {e}")
@@ -188,7 +234,7 @@ class SkeeterDeleter:
 
         # Find posts I have self-liked (i.e., likes I created that reference my own posts)
         self_liked_posts = self.gather_self_liked_posts(repo, **params)
-        print(f"Found {len(self_liked_posts)} self-liked post{'' if len(self_liked_posts) == 1 else 's'} to delete (you liked your own posts).")
+        print(f"Found {len(self_liked_posts)} self-liked post{'' if len(self_liked_posts) == 1 else 's'} to delete (only including posts older than 3 days).")
 
         # Only delete authored posts that you self-liked
         self.to_delete = self_liked_posts

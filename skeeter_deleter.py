@@ -131,15 +131,17 @@ class PostQualifier(models.AppBskyFeedDefs.PostView):
             domains_to_protect (list): List of domains to protect.
             now (datetime): The current time.
             self_likes (list): List of self-liked posts extracted from
-                               the feed archive
+                               the feed archive (kept for signature compatibility)
             post (PostQualifier): The post to evaluate.
         Returns:
             bool: True if the post should be deleted, False otherwise.
         """
+        # Previously this excluded self-liked posts:
+        #    and not post.is_self_liked(self_likes)
+        # We want to include self-liked posts in deletions, so remove that exclusion.
         #if (post.is_viral(viral_threshold) or 
         if post.is_stale(stale_threshold, now) and \
-            not post.is_protected_domain(domains_to_protect) and \
-            not post.is_self_liked(self_likes):
+            not post.is_protected_domain(domains_to_protect):
             return True
         return False
 
@@ -217,28 +219,47 @@ class SkeeterDeleter:
             return block
 #begin ChatGPT Edit
     def likes(self, repo, stale_threshold, now, **kwargs) -> list[PostQualifier]:
+        """
+        Find posts that this user has liked (from the archived repo) and return
+        those that match the deletion criteria.
+        """
         archive = CAR.from_bytes(repo)
-        
-        # Collect the posts liked by the user
-        self_likes = list(filter(lambda x: archive.blocks.get(x['subject']['cid']),
-                                 filter(lambda x : self.client.me.did in x['subject']['uri'], likes)))
-        
-        # Instead of unliking, we want to delete the posts the user has liked
+
+        # Collect all blocks and filter for like blocks
+        blocks = [archive.blocks.get(cid) for cid in archive.blocks]
+        like_blocks = [
+            b for b in blocks
+            if isinstance(b, dict) and b.get('$type') and 'app.bsky.feed.like' in b.get('$type')
+        ]
+
+        # Keep only likes created by this authenticated user and where the liked subject exists in the archive
+        user_likes = [
+            b for b in like_blocks
+            if b.get('creator') == self.client.me.did
+            and b.get('subject') and archive.blocks.get(b['subject'].get('cid'))
+        ]
+
+        domains_to_protect = kwargs.get('domains_to_protect', [])
         to_delete = []
-        for batch in self.chunker(self_likes, 25):
+        for batch in self.chunker(user_likes, 25):
             try:
                 posts_to_delete = self.client.get_posts(uris=[x['subject']['uri'] for x in batch])
+                # PostQualifier.to_delete expects (stale_threshold, domains_to_protect, now, self_likes, post)
                 to_delete.extend(
                     list(filter(
-                        partial(PostQualifier.to_delete, stale_threshold, now),
+                        partial(PostQualifier.to_delete,
+                                stale_threshold,
+                                domains_to_protect,
+                                now,
+                                []),  # pass empty self_likes list; self-like exclusion removed anyway
                         map(partial(PostQualifier.cast, self.client),
                             posts_to_delete.posts)
                     ))
                 )
             except httpx.HTTPStatusError as e:
-                logging.error(f"An HTTP error occured while fetching liked posts: {e}")
+                logging.error(f"An HTTP error occurred while fetching liked posts: {e}")
             except Exception as e:
-                logging.error(f"An error occured while fetching liked posts: {e}")
+                logging.error(f"An error occurred while fetching liked posts: {e}")
 
         return to_delete
 #end ChatGPT edit

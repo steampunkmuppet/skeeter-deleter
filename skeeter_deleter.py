@@ -398,7 +398,7 @@ class SkeeterDeleter:
         repo = self.archive_repo(**params)
 
         # Gather liked posts to delete, no need to gather "unliked" or "to_unrepost" anymore
-        self.to_delete = self.gather_likes(repo, **params)
+        self.to_delete = self.likes(repo, **params)
         print(f"Found {len(self.to_delete)} post{'' if len(self.to_delete) == 1 else 's'} to delete.")
 
     def delete(self):
